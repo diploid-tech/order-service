@@ -1,0 +1,33 @@
+main:
+  namespace: services
+  name: order-service
+  description: |
+    A example service for storing orders. It has an private end-point to upsert orders from an integration service. Sends an event when the order is stored in this service.
+
+    This service is an example of being a generic service for a specific domain entity (order) where the entities are originating from outside
+    the platform (via integration services). The order in this service gets an internal id, but holds a dictionary of external identifiers (so an order could also point to different systems)
+  deploymentType: Service
+  integration: none
+  buildType: netcore
+  httpPort: 5000
+  clusterPort: 2552
+  team: platform
+  authorization:
+    requiredClaims:
+      azp: applications
+      aud: account
+    mappings:
+      x-avanti-customerId: context.customerId
+      x-avanti-email: email
+environments:
+  staging:
+    replicaCount: 1
+    cpuLimit: 75m
+    memoryLimit: 128Mi
+    vars:
+      AkkaSettings__AkkaClusterDiscoveryResolver: Kubernetes
+      AkkaSettings__MinNumberOfNodesInCluster: 1
+      AuthenticationSettings__BasicAuthenticationPassword: hksdflkjsaflkdkdljflaksdkl
+      Serilog__MinimumLevel__Default: Information
+      RelationalDataStoreSettings__DatabaseName: order
+      ProcessorSettings__DelayProcessingOnStartInSeconds: 10
