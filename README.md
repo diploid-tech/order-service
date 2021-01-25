@@ -7,7 +7,7 @@ This service is an example of being a generic service for a specific domain enti
 ## Prerequisites
 
 - Windows / Linux / MacOS
-- ASP.NET Core 3.1 Runtime
+- .NET 5 Runtime
 - PostgreSQL 12 or higher
 
 ## Installation
