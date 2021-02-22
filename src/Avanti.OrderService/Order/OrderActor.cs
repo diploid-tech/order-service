@@ -30,25 +30,22 @@ namespace Avanti.OrderService.Order
             this.mapper = mapper;
             this.clock = clock;
 
-            ReceiveAsync<GetOrderById>(m => Handle(m).PipeTo(Sender));
-            ReceiveAsync<InsertExternalOrder>(m => Handle(m).PipeTo(Sender));
+            ReceiveAsync<GetOrderById>(m => Handle(m).PipeTo(this.Sender));
+            ReceiveAsync<InsertExternalOrder>(m => Handle(m).PipeTo(this.Sender));
         }
 
         private async Task<IResponse> Handle(GetOrderById m)
         {
             this.log.Info($"Incoming request for getting order by id {m.Id}");
 
-            var result = await this.relationalDataStoreActorProvider.ExecuteScalarJsonAs<OrderDocument>(
+            Result<OrderDocument>? result = await this.relationalDataStoreActorProvider.ExecuteScalarJsonAs<OrderDocument>(
                 DataStoreStatements.GetOrderById,
-                new
-                {
-                    Id = m.Id
-                });
+                new { m.Id });
 
             return result switch
             {
                 IsSome<OrderDocument> scalar => new OrderFound { Id = m.Id, Document = scalar.Value },
-                IsNone _ => new OrderNotFound(),
+                IsNone => new OrderNotFound(),
                 _ => new OrderRetrievalFailed()
             };
         }
@@ -57,7 +54,7 @@ namespace Avanti.OrderService.Order
         {
             this.log.Info($"Incoming request to upsert order with external id '{m.ExternalId}' from system '{m.System}'");
 
-            var existingOrder = await GetExistingOrderByExternalIdentifier(m.ExternalId, m.System);
+            Result<int>? existingOrder = await GetExistingOrderByExternalIdentifier(m.ExternalId, m.System);
             if (existingOrder is IsSome<int>)
             {
                 this.log.Warning($"Existing order with external id '{m.ExternalId}' from system '{m.System}' is tried to insert again. Skipping...");
@@ -70,8 +67,8 @@ namespace Avanti.OrderService.Order
                 return new OrderFailedToStore();
             }
 
-            var document = mapper.Map<OrderDocument>(m);
-            var result = await this.relationalDataStoreActorProvider.ExecuteScalar<int>(
+            OrderDocument? document = this.mapper.Map<OrderDocument>(m);
+            Result<int>? result = await this.relationalDataStoreActorProvider.ExecuteScalar<int>(
                 DataStoreStatements.InsertOrder,
                 new
                 {
@@ -82,8 +79,8 @@ namespace Avanti.OrderService.Order
             switch (result)
             {
                 case IsSome<int> id:
-                    var e = mapper.Map<Events.OrderInserted>((id.Value, document));
-                    if (await platformEventActorProvider.SendEvent(e) is IsSuccess)
+                    Events.OrderInserted? e = this.mapper.Map<Events.OrderInserted>((id.Value, document));
+                    if (await this.platformEventActorProvider.SendEvent(e) is IsSuccess)
                     {
                         return new OrderInserted { Id = id.Value };
                     }

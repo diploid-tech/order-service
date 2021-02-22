@@ -11,13 +11,13 @@ namespace Avanti.OrderServiceTests.Order.Api
 {
     public partial class PrivateApiControllerSpec : WithSubject<PrivateApiController>
     {
-        private ProgrammableActor<OrderActor> progOrderActor;
+        private readonly ProgrammableActor<OrderActor> progOrderActor;
 
         private PrivateApiControllerSpec()
         {
-            this.progOrderActor = Kit.CreateProgrammableActor<OrderActor>("order-actor");
-            var orderActorProvider = An<IActorProvider<OrderActor>>();
-            orderActorProvider.Get().Returns(this.progOrderActor.TestProbe);
+            progOrderActor = Kit.CreateProgrammableActor<OrderActor>("order-actor");
+            IActorProvider<OrderActor> orderActorProvider = An<IActorProvider<OrderActor>>();
+            orderActorProvider.Get().Returns(progOrderActor.TestProbe);
 
             var config = new MapperConfiguration(cfg => cfg.AddProfile(new OrderMapping()));
             config.AssertConfigurationIsValid();

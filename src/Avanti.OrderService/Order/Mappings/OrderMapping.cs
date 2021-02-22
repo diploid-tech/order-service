@@ -23,9 +23,7 @@ namespace Avanti.OrderService.Order.Mappings
             CreateMap<OrderActor.InsertExternalOrder, OrderDocument>()
                 .ForMember(s => s.ExternalIdentifiers, o => o.Ignore())
                 .AfterMap((src, dest, context) =>
-                {
-                    dest.ExternalIdentifiers = new Dictionary<string, string> { { src.System, src.ExternalId } }.ToImmutableDictionary();
-                });
+                    dest.ExternalIdentifiers = new Dictionary<string, string> { { src.System, src.ExternalId } }.ToImmutableDictionary());
             CreateMap<OrderActor.InsertExternalOrder.OrderLine, OrderDocument.OrderLine>();
             CreateMap<(int Id, OrderDocument Document), OrderInserted>()
                 .ForMember(s => s.Id, o => o.MapFrom(s => s.Id))

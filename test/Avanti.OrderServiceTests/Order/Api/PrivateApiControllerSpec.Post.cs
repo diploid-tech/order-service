@@ -13,7 +13,7 @@ namespace Avanti.OrderServiceTests.Order.Api
     {
         public class When_PostOrder_Request_Is_Received : PrivateApiControllerSpec
         {
-            private PrivateApiController.PostOrderRequest request = new PrivateApiController.PostOrderRequest
+            private readonly PrivateApiController.PostOrderRequest request = new()
             {
                 ExternalId = "53419-01",
                 System = "eCommerceSystem",
@@ -31,7 +31,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.InsertExternalOrder>(request =>
                     new OrderActor.OrderInserted { Id = 500 });
 
-                var result = await Subject.PostOrder(request);
+                IActionResult result = await Subject.PostOrder(request);
 
                 result.Should().BeOfType<OkObjectResult>()
                     .Which.Value.Should().BeEquivalentTo(new PrivateApiController.PostOrderResponse { Id = 500 });
@@ -57,7 +57,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.InsertExternalOrder>(request =>
                     new OrderActor.OrderFailedToStore());
 
-                var result = await Subject.PostOrder(request);
+                IActionResult result = await Subject.PostOrder(request);
 
                 result.Should().BeOfType<StatusCodeResult>()
                     .Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
@@ -69,7 +69,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.InsertExternalOrder>(request =>
                     new OrderActor.OrderAlreadyExists());
 
-                var result = await Subject.PostOrder(request);
+                IActionResult result = await Subject.PostOrder(request);
 
                 result.Should().BeOfType<ConflictResult>();
             }

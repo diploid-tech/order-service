@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Avanti.OrderService.Order.Api
@@ -17,14 +16,14 @@ namespace Avanti.OrderService.Order.Api
                     Tags = new[] { "Order" })]
         [HttpPost]
         public async Task<IActionResult> PostOrder([FromBody] PostOrderRequest request) =>
-            await orderActorRef.Ask<OrderActor.IResponse>(
-                mapper.Map<OrderActor.InsertExternalOrder>(request)) switch
+            await this.orderActorRef.Ask<OrderActor.IResponse>(
+                this.mapper.Map<OrderActor.InsertExternalOrder>(request)) switch
             {
                 OrderActor.OrderInserted stored => new OkObjectResult(new PostOrderResponse
                 {
                     Id = stored.Id
                 }),
-                OrderActor.OrderAlreadyExists _ => new ConflictResult(),
+                OrderActor.OrderAlreadyExists => new ConflictResult(),
                 _ => new StatusCodeResult(StatusCodes.Status500InternalServerError)
             };
     }

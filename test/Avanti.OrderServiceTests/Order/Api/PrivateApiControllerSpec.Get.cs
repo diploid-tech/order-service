@@ -30,7 +30,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.GetOrderById>(request =>
                     new OrderActor.OrderFound { Id = 501, Document = order });
 
-                var result = await Subject.GetOrder(
+                IActionResult result = await Subject.GetOrder(
                     new PrivateApiController.GetOrderRequest { Id = 501 });
 
                 result.Should().BeOfType<OkObjectResult>()
@@ -57,7 +57,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.GetOrderById>(request =>
                     new OrderActor.OrderNotFound());
 
-                var result = await Subject.GetOrder(
+                IActionResult result = await Subject.GetOrder(
                     new PrivateApiController.GetOrderRequest { Id = 501 });
 
                 result.Should().BeOfType<NotFoundResult>();
@@ -69,7 +69,7 @@ namespace Avanti.OrderServiceTests.Order.Api
                 progOrderActor.SetResponseForRequest<OrderActor.GetOrderById>(request =>
                     new OrderActor.OrderRetrievalFailed());
 
-                var result = await Subject.GetOrder(
+                IActionResult result = await Subject.GetOrder(
                     new PrivateApiController.GetOrderRequest { Id = 501 });
 
                 result.Should().BeOfType<StatusCodeResult>()

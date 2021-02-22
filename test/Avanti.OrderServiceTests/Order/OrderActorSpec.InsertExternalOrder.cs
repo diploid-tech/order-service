@@ -19,7 +19,7 @@ namespace Avanti.OrderServiceTests.Order
     {
         public class When_Insert_External_Order_Is_Received : OrderActorSpec
         {
-            private OrderActor.InsertExternalOrder input = new OrderActor.InsertExternalOrder
+            private readonly OrderActor.InsertExternalOrder input = new()
             {
                 ExternalId = "53419-01",
                 System = "eCommerceSystem",
@@ -33,12 +33,12 @@ namespace Avanti.OrderServiceTests.Order
 
             public When_Insert_External_Order_Is_Received()
             {
-                this.progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
+                progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
                     request.SqlCommand == DataStoreStatements.GetOrderByExternalId ?
                         new RelationalDataStoreActor.ScalarResult(null) :
                         new RelationalDataStoreActor.ScalarResult(501));
 
-                this.progPlatformEventActor.SetResponseForRequest<PlatformEventActor.SendEvent>(request =>
+                progPlatformEventActor.SetResponseForRequest<PlatformEventActor.SendEvent>(request =>
                     new PlatformEventActor.EventSendSuccess());
             }
 
@@ -67,8 +67,8 @@ namespace Avanti.OrderServiceTests.Order
                         Id = 501
                     });
 
-                var r = this.progDatastoreActor.GetRequests<RelationalDataStoreActor.ExecuteScalar>();
-                this.progDatastoreActor.GetRequests<RelationalDataStoreActor.ExecuteScalar>()
+                IEnumerable<RelationalDataStoreActor.ExecuteScalar> r = progDatastoreActor.GetRequests<RelationalDataStoreActor.ExecuteScalar>();
+                progDatastoreActor.GetRequests<RelationalDataStoreActor.ExecuteScalar>()
                     .Should().BeEquivalentTo(new[]
                     {
                         new RelationalDataStoreActor.ExecuteScalar(
@@ -86,7 +86,7 @@ namespace Avanti.OrderServiceTests.Order
                             })
                     });
 
-                this.progPlatformEventActor.GetRequest<PlatformEventActor.SendEvent>().Should().BeEquivalentTo(
+                progPlatformEventActor.GetRequest<PlatformEventActor.SendEvent>().Should().BeEquivalentTo(
                     new PlatformEventActor.SendEvent(
                         new OrderInserted
                         {
@@ -98,7 +98,7 @@ namespace Avanti.OrderServiceTests.Order
             [Fact]
             public void Should_Return_Failure_When_Failed_To_Store()
             {
-                this.progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
+                progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
                     new RelationalDataStoreActor.ExecuteFailed());
 
                 Subject.Tell(input);
@@ -109,7 +109,7 @@ namespace Avanti.OrderServiceTests.Order
             [Fact]
             public void Should_Return_Failure_When_Failed_To_Send_Event()
             {
-                this.progPlatformEventActor.SetResponseForRequest<PlatformEventActor.SendEvent>(request =>
+                progPlatformEventActor.SetResponseForRequest<PlatformEventActor.SendEvent>(request =>
                     new PlatformEventActor.EventSendFailed());
 
                 Subject.Tell(input);
