@@ -5,6 +5,7 @@ using Akka.Event;
 using AutoMapper;
 using Avanti.Core.EventStream;
 using Avanti.Core.Microservice;
+using Avanti.Core.Microservice.Extensions;
 using Avanti.Core.RelationalData;
 using Avanti.Core.RelationalData.PostgreSQL;
 using Avanti.OrderService.Order.Documents;
@@ -30,8 +31,8 @@ namespace Avanti.OrderService.Order
             this.mapper = mapper;
             this.clock = clock;
 
-            ReceiveAsync<GetOrderById>(m => Handle(m).PipeTo(this.Sender));
-            ReceiveAsync<InsertExternalOrder>(m => Handle(m).PipeTo(this.Sender));
+            ReceiveAsync<GetOrderById>(m => Handle(m).AsyncReplyTo(this.Sender));
+            ReceiveAsync<InsertExternalOrder>(m => Handle(m).AsyncReplyTo(this.Sender));
         }
 
         private async Task<IResponse> Handle(GetOrderById m)
