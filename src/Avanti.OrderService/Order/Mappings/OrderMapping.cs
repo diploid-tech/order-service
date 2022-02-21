@@ -16,7 +16,9 @@ namespace Avanti.OrderService.Order.Mappings
             CreateMap<OrderActor.OrderFound, PrivateApiController.GetOrderResponse>()
                 .AfterMap((src, dest, context) => context.Mapper.Map(src.Document, dest))
                 .ForMember(s => s.Id, o => o.MapFrom(s => s.Id))
-                .ForAllOtherMembers(o => o.Ignore());
+                .ForMember(s => s.OrderDate, o => o.Ignore())
+                .ForMember(s => s.Lines, o => o.Ignore())
+                .ForMember(s => s.ExternalIdentifiers, o => o.Ignore());
             CreateMap<OrderDocument.OrderLine, PrivateApiController.GetOrderResponse.OrderLine>();
             CreateMap<OrderDocument, PrivateApiController.GetOrderResponse>()
                 .ForMember(s => s.Id, o => o.Ignore());
