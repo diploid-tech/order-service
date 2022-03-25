@@ -9,7 +9,7 @@ main:
     the platform (via integration services). The order in this service gets an internal id, but holds a dictionary of external identifiers (so an order could also point to different systems)
   deploymentType: Service
   integration: none
-  buildType: dotnet
+  buildType: dotnet6
   httpPort: 5000
   clusterPort: 2552
   team: platform
