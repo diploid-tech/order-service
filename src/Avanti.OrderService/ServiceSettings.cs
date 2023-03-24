@@ -1,7 +1,6 @@
 using Avanti.Core.Microservice.Settings;
 
-namespace Avanti.OrderService
-{
-    public class ServiceSettings : Validatable
-    { }
-}
+namespace Avanti.OrderService;
+
+public class ServiceSettings : IValidatable
+{ }

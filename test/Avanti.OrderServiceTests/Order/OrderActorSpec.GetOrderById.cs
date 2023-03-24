@@ -8,69 +8,68 @@ using Avanti.OrderService.Order.Documents;
 using FluentAssertions;
 using Xunit;
 
-namespace Avanti.OrderServiceTests.Order
+namespace Avanti.OrderServiceTests.Order;
+
+public partial class OrderActorSpec
 {
-    public partial class OrderActorSpec
+    public class When_Get_Order_By_Id_Is_Received : OrderActorSpec
     {
-        public class When_Get_Order_By_Id_Is_Received : OrderActorSpec
+        private readonly OrderActor.GetOrderById input = new() { Id = 501 };
+
+        [Fact]
+        public void Should_Return_Order_When_Found()
         {
-            private readonly OrderActor.GetOrderById input = new() { Id = 501 };
-
-            [Fact]
-            public void Should_Return_Order_When_Found()
+            var document = new OrderDocument
             {
-                var document = new OrderDocument
+                OrderDate = DateTimeOffset.Parse("2020-07-01T19:00:00Z", CultureInfo.InvariantCulture),
+                Lines = new[]
                 {
-                    OrderDate = DateTimeOffset.Parse("2020-07-01T19:00:00Z", CultureInfo.InvariantCulture),
-                    Lines = new[]
+                    new OrderDocument.OrderLine { ProductId = 5, Amount = 1 },
+                    new OrderDocument.OrderLine { ProductId = 7, Amount = 5 }
+                }
+            };
+
+            progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
+                    new RelationalDataStoreActor.ScalarResult(JsonSerializer.Serialize(document)));
+
+            Subject.Tell(input);
+
+            Kit.ExpectMsg<OrderActor.OrderFound>().Should().BeEquivalentTo(
+                new OrderActor.OrderFound
+                {
+                    Id = 501,
+                    Document = document
+                });
+
+            progDatastoreActor.GetRequest<RelationalDataStoreActor.ExecuteScalar>()
+                .Should().BeEquivalentTo(new RelationalDataStoreActor.ExecuteScalar(
+                    DataStoreStatements.GetOrderById,
+                    new
                     {
-                        new OrderDocument.OrderLine { ProductId = 5, Amount = 1 },
-                        new OrderDocument.OrderLine { ProductId = 7, Amount = 5 }
-                    }
-                };
+                        Id = 501
+                    }));
+        }
 
-                progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
-                        new RelationalDataStoreActor.ScalarResult(JsonSerializer.Serialize(document)));
+        [Fact]
+        public void Should_Return_Not_Found_When_Not_Found()
+        {
+            progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
+                new RelationalDataStoreActor.ScalarResult(null));
 
-                Subject.Tell(input);
+            Subject.Tell(input);
 
-                Kit.ExpectMsg<OrderActor.OrderFound>().Should().BeEquivalentTo(
-                    new OrderActor.OrderFound
-                    {
-                        Id = 501,
-                        Document = document
-                    });
+            Kit.ExpectMsg<OrderActor.OrderNotFound>();
+        }
 
-                progDatastoreActor.GetRequest<RelationalDataStoreActor.ExecuteScalar>()
-                    .Should().BeEquivalentTo(new RelationalDataStoreActor.ExecuteScalar(
-                        DataStoreStatements.GetOrderById,
-                        new
-                        {
-                            Id = 501
-                        }));
-            }
+        [Fact]
+        public void Should_Return_Failure_When_Could_Not_Retrieve_Data()
+        {
+            progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
+                new RelationalDataStoreActor.ExecuteFailed());
 
-            [Fact]
-            public void Should_Return_Not_Found_When_Not_Found()
-            {
-                progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
-                    new RelationalDataStoreActor.ScalarResult(null));
+            Subject.Tell(input);
 
-                Subject.Tell(input);
-
-                Kit.ExpectMsg<OrderActor.OrderNotFound>();
-            }
-
-            [Fact]
-            public void Should_Return_Failure_When_Could_Not_Retrieve_Data()
-            {
-                progDatastoreActor.SetResponseForRequest<RelationalDataStoreActor.ExecuteScalar>(request =>
-                    new RelationalDataStoreActor.ExecuteFailed());
-
-                Subject.Tell(input);
-
-                Kit.ExpectMsg<OrderActor.OrderRetrievalFailed>();
-            }
+            Kit.ExpectMsg<OrderActor.OrderRetrievalFailed>();
         }
     }
 }
